@@ -1,0 +1,42 @@
+---
+title: 'TFM: script_R_2'
+author: "Juan Herranz Martin"
+output:
+  pdf_document: default
+  html_document: default
+---
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+df<-read.csv("data_total_imputed.csv", header = T, encoding = "UTF-8")
+df$X<-NULL
+
+summary(df)
+```
+
+```{r}
+boxplot(NO2~HORA, data=df, main="Boxplots por hora de niveles de NO2")
+boxplot(NO2~HORA, data=df, outline=FALSE, main="Boxplots por hora de niveles de NO2 (sin outliers)")
+
+boxplot(O3~HORA, data=df, main="Boxplots por hora de niveles de O3")
+boxplot(O3~HORA, data=df, outline=FALSE, main="Boxplots por hora de niveles de O3 (sin outliers)")
+
+boxplot(PM10~HORA, data=df, main="Boxplots por hora de niveles de PM10")
+boxplot(PM10~HORA, data=df, outline=FALSE, main="Boxplots por hora de niveles de PM10 (sin outliers)")
+
+boxplot(SO2~HORA, data=df, main="Boxplots por hora de niveles de SO2")
+boxplot(SO2~HORA, data=df, outline=FALSE, main="Boxplots por hora de niveles de SO2 (sin outliers)")
+```
+
+```{r}
+library(ggplot2)
+
+df$FECHA<-as.Date(df$FECHA)
+
+ggplot(data = df[df$ESTACION=="Salamanca5",], aes(FECHA)) + geom_line(aes(y = T_MAX, colour = "tmax")) + geom_line(aes(y = T_MED, colour = "tmed")) + geom_line(aes(y = T_MIN, colour = "tmin")) + scale_x_date(date_breaks = "1 month", date_labels = "%m", limits=as.Date(c('2016-01-01','2016-12-31'))) + ggtitle("Temperaturas máxima, media y mínima en 2016 (en ºC) en Salamanca")
+
+ggplot(data = df[df$ESTACION=="Salamanca5",], aes(FECHA)) + geom_line(aes(y = PRES_MAX, colour = "presMax")) + geom_line(aes(y = PRES_MIN, colour = "presMin")) + scale_x_date(date_breaks = "1 month", date_labels = "%m", limits=as.Date(c('2016-01-01','2016-12-31'))) + ggtitle("Presión (en hPa) máxima y mínima en 2016 en Salamanca")
+```
+

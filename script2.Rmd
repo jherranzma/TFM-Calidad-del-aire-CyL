@@ -1,0 +1,178 @@
+---
+title: 'TFM: script_R_1'
+author: "Juan Herranz Martin"
+output:
+  pdf_document: default
+  html_document: default
+---
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+data<-read.csv2("outCAH.csv", header = T, encoding = "UTF-8")
+dim(data)
+colnames(data)
+head(data)
+str(data)
+
+
+library(reshape)
+data<-rename(data,c(Fecha="Fecha_hora"))
+
+data$Fecha_hora<-strptime(data$Fecha_hora, format="%d/%m/%Y %H")
+
+library(lubridate)
+dates<-ymd_hms(data$Fecha_hora)
+
+Anio<-year(dates)
+data<-cbind(data,Anio)
+
+Fecha<-as.Date(data$Fecha_hora)
+data<-cbind(data,Fecha)
+
+data<-data[data$Anio>=2014,]
+
+data$CO..mg.m3.<-NULL
+data$PM25..ug.m3.<-NULL
+data$NO..ug.m3.<-NULL
+data$Anio<-NULL
+data$Latitud<-NULL
+data$Longitud<-NULL
+
+data<-rename(data,c(Estación="Estacion"))
+
+data<-droplevels(data)
+
+str(data)
+
+write.csv(data,file="datoscontam_2014_2018.csv")
+```
+```{r}
+df_concat<-read.csv("df_concat.csv", header = T, encoding = "UTF-8")
+df_concat$Fecha_hora<-strptime(df_concat$Fecha_hora, format="%Y-%m-%d %H")
+
+library(lubridate)
+dates<-ymd_hms(df_concat$Fecha_hora)
+
+Hour<-hour(dates)
+df_concat<-cbind(df_concat,Hour)
+
+write.csv(df_concat,file="df_concat_hour.csv")
+```
+
+
+
+
+
+```{r}
+clima<-read.csv("datos_clima_integrados.csv", header = T, encoding = "UTF-8", dec = ",")
+str(clima$nombre)
+summary(clima)
+clima$X<-NULL
+
+
+
+clima$fecha<-as.Date(clima$fecha)
+dates2<-ymd(clima$fecha)
+Month<-month(dates2)
+clima<-cbind(clima,Month)
+Year<-year(dates2)
+clima<-cbind(clima,Year)
+
+
+clima$prec = as.character(clima$prec)
+clima$prec[clima$prec=="Ip"]<-"0,01"
+
+
+
+clima <- transform(clima, altitud = as.integer(altitud), dir = as.integer(dir), indicativo = as.factor(indicativo), nombre = as.factor(nombre), prec = as.numeric(sub(",", ".", prec)), presMax = as.numeric(sub(",", ".", presMax)), presMin = as.numeric(sub(",", ".", presMin)), provincia = as.factor(provincia), racha = as.numeric(sub(",", ".", racha)), tmax = as.numeric(sub(",", ".", tmax)), tmed = as.numeric(sub(",", ".", tmed)), tmin = as.numeric(sub(",", ".", tmin)), velmedia = as.numeric(sub(",", ".", velmedia)))
+
+clima$nombre = as.character(clima$nombre)
+clima$nombre[clima$nombre=="ARANDA DE DUERO"]<-"Aranda de Duero 2"
+
+burgos1<-clima[clima$nombre=="BURGOS AEROPUERTO",]
+burgos1$nombre[burgos1$nombre=="BURGOS AEROPUERTO"]<-"Burgos1"
+clima<-rbind(clima,burgos1)
+
+clima$nombre[clima$nombre=="BURGOS AEROPUERTO"]<-"Burgos4"
+
+clima$nombre[clima$nombre=="SAELICES EL CHICO"]<-"El Maillo"
+
+muriel<-clima[clima$nombre=="SORIA",]
+muriel$nombre[muriel$nombre=="SORIA"]<-"Muriel de la Fuente"
+clima<-rbind(clima,muriel)
+
+clima$nombre[clima$nombre=="SORIA"]<-"Soria"
+
+renault<-clima[clima$nombre=="AUTILLA DEL PINO",]
+renault$nombre[renault$nombre=="AUTILLA DEL PINO"]<-"Renault4"
+clima<-rbind(clima,renault)
+
+clima$nombre[clima$nombre=="AUTILLA DEL PINO"]<-"Palencia 3"
+
+ct1<-clima[clima$nombre=="PONFERRADA",]
+ct1$nombre[ct1$nombre=="PONFERRADA"]<-"C.T.Compostilla-Cortiguera"
+clima<-rbind(clima,ct1)
+
+ct2<-clima[clima$nombre=="PONFERRADA",]
+ct2$nombre[ct2$nombre=="PONFERRADA"]<-"C.T.Compostilla-Congosto"
+clima<-rbind(clima,ct2)
+
+clima$nombre[clima$nombre=="PONFERRADA"]<-"Ponferrada4"
+
+sala<-clima[clima$nombre=="SALAMANCA",]
+sala$nombre[sala$nombre=="SALAMANCA"]<-"Salamanca5"
+clima<-rbind(clima,sala)
+
+clima$nombre[clima$nombre=="SALAMANCA"]<-"Salamanca6"
+
+clima$nombre[clima$nombre=="SEGOVIA"]<-"Segovia 2"
+
+clima$nombre[clima$nombre=="ZAMORA"]<-"Zamora 2"
+
+
+write.csv(clima,file="datos_clima_integrados_fin.csv")
+
+str(clima)
+summary(clima)
+
+
+
+library(ggplot2)
+ggplot(data = clima[clima$nombre=="ARANDA DE DUERO",], aes(fecha, prec)) + geom_line() + scale_x_date(date_breaks = "1 month", date_labels = "%m", limits=as.Date(c('2016-01-01','2016-12-31'))) + ggtitle("Precipitaciones (en mm) en 2016 en Aranda de Duero")
+
+ggplot(data = clima[clima$nombre=="SALAMANCA",], aes(fecha, prec)) + geom_line() + scale_x_date(date_breaks = "1 month", date_labels = "%m", limits=as.Date(c('2016-01-01','2016-12-31'))) + ggtitle("Precipitaciones (en mm) en 2016 en Salamanca")
+
+ggplot(data = clima[clima$nombre=="PONFERRADA",], aes(fecha, prec)) + geom_line() + scale_x_date(date_breaks = "1 month", date_labels = "%m", limits=as.Date(c('2016-01-01','2016-12-31'))) + ggtitle("Precipitaciones (en mm) en 2016 en Ponferrada")
+
+
+
+ggplot(data = clima[clima$nombre=="ARANDA DE DUERO",], aes(fecha)) + geom_line(aes(y = tmax, colour = "tmax")) + geom_line(aes(y = tmed, colour = "tmed")) + geom_line(aes(y = tmin, colour = "tmin")) + scale_x_date(date_breaks = "1 month", date_labels = "%m", limits=as.Date(c('2016-01-01','2016-12-31'))) + ggtitle("Temperaturas máxima, media y mínima en 2016 (en ºC) en Aranda de Duero")
+
+ggplot(data = clima[clima$nombre=="SALAMANCA",], aes(fecha)) + geom_line(aes(y = tmax, colour = "tmax")) + geom_line(aes(y = tmed, colour = "tmed")) + geom_line(aes(y = tmin, colour = "tmin")) + scale_x_date(date_breaks = "1 month", date_labels = "%m", limits=as.Date(c('2016-01-01','2016-12-31'))) + ggtitle("Temperaturas máxima, media y mínima en 2016 (en ºC) en Salamanca")
+
+ggplot(data = clima[clima$nombre=="PONFERRADA",], aes(fecha)) + geom_line(aes(y = tmax, colour = "tmax")) + geom_line(aes(y = tmed, colour = "tmed")) + geom_line(aes(y = tmin, colour = "tmin")) + scale_x_date(date_breaks = "1 month", date_labels = "%m", limits=as.Date(c('2016-01-01','2016-12-31'))) + ggtitle("Temperaturas máxima, media y mínima en 2016 (en ºC) en Ponferrada")
+
+
+
+ggplot(data = clima[clima$nombre=="ARANDA DE DUERO",], aes(fecha)) + geom_line(aes(y = presMax, colour = "presMax")) + geom_line(aes(y = presMin, colour = "presMin")) + scale_x_date(date_breaks = "1 month", date_labels = "%m", limits=as.Date(c('2016-01-01','2016-12-31'))) + ggtitle("Presión (en hPa) máxima y mínima en 2016 en Aranda de Duero")
+
+ggplot(data = clima[clima$nombre=="SALAMANCA",], aes(fecha)) + geom_line(aes(y = presMax, colour = "presMax")) + geom_line(aes(y = presMin, colour = "presMin")) + scale_x_date(date_breaks = "1 month", date_labels = "%m", limits=as.Date(c('2016-01-01','2016-12-31'))) + ggtitle("Presión (en hPa) máxima y mínima en 2016 en Salamanca")
+
+ggplot(data = clima[clima$nombre=="PONFERRADA",], aes(fecha)) + geom_line(aes(y = presMax, colour = "presMax")) + geom_line(aes(y = presMin, colour = "presMin")) + scale_x_date(date_breaks = "1 month", date_labels = "%m", limits=as.Date(c('2016-01-01','2016-12-31'))) + ggtitle("Presión (en hPa) máxima y mínima en 2016 en Ponferrada")
+
+
+
+ggplot(data = clima[clima$nombre=="ARANDA DE DUERO",], aes(fecha)) + geom_line(aes(y = racha, colour = "racha")) + geom_line(aes(y = velmedia, colour = "velmedia")) + scale_x_date(date_breaks = "1 month", date_labels = "%m", limits=as.Date(c('2016-01-01','2016-12-31'))) + ggtitle("Velocidad (en m/s) máxima y media del viento en 2016 en Aranda de Duero")
+
+ggplot(data = clima[clima$nombre=="SALAMANCA",], aes(fecha)) + geom_line(aes(y = racha, colour = "racha")) + geom_line(aes(y = velmedia, colour = "velmedia")) + scale_x_date(date_breaks = "1 month", date_labels = "%m", limits=as.Date(c('2016-01-01','2016-12-31'))) + ggtitle("Velocidad (en m/s) máxima y media del viento en 2016 en Salamanca")
+
+ggplot(data = clima[clima$nombre=="PONFERRADA",], aes(fecha)) + geom_line(aes(y = racha, colour = "racha")) + geom_line(aes(y = velmedia, colour = "velmedia")) + scale_x_date(date_breaks = "1 month", date_labels = "%m", limits=as.Date(c('2016-01-01','2016-12-31'))) + ggtitle("Velocidad (en m/s) máxima y media del viento en 2016 en Ponferrada")
+```
+
+
+```{r}
+data_merge<-read.csv("data_merge.csv", header = T, encoding = "UTF-8")
+```
+
